@@ -1,4 +1,4 @@
-# openai-node-template
+# Cuisine Connect By Nhisty
 
 ## Requirements
 
@@ -38,3 +38,10 @@ docker-compose exec node npm start
 ```bash
 docker-compose down --remove-orphans --volumes
 ```
+
+## Authors
+
+- KANOUTE Hamidou
+- DEVECI Serkan 
+- LE GOLANNEC Erwan
+- JALLU Thomas
