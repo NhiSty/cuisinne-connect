@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  node:
+    image: node:20.0.0-alpine
+    tty: true
+    stdin_open: true
+    user: node
+    working_dir: /home/node
+    env_file: .env
+    volumes:
+      - .:/home/node
