@@ -1,8 +1,8 @@
-import OpenAI from "openai";
+const OpenAI = require('openai');
 
-export default class OpenAIChat {
+class OpenAIChat {
     constructor(apiKey,
-                initialSystemMessage = 'Tu es un chef cuisinier étoilé, réputé pour tes talents culinaires du monde entier et tu es en train de discuter avec des élèves qui souhaitent que tu répondes à leurs questions sur leurs besoins de recettes ou autres questions concernant la cuisine du monde entier.') {
+        initialSystemMessage = 'Tu es un chef cuisinier étoilé, réputé pour tes talents culinaires du monde entier et tu es en train de discuter avec des élèves qui souhaitent que tu répondes à leurs questions sur leurs besoins de recettes ou autres questions concernant la cuisine du monde entier.') {
         this.openai = new OpenAI({ apiKey });
         this.model = 'gpt-3.5-turbo';
         this.conversation = [
@@ -22,6 +22,7 @@ export default class OpenAIChat {
                 messages: this.conversation,
                 model: this.model,
                 //maxTokens: 300,
+
             });
 
             const assistantResponse = completion.choices[0].message.content;
@@ -34,3 +35,4 @@ export default class OpenAIChat {
     }
 }
 
+module.exports = OpenAIChat

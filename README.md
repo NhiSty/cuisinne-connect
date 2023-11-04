@@ -1,46 +1,45 @@
-# Cuisine Connect By Nhisty
+![example workflow](https://github.com/rzgry/Express-REST-API-Template/actions/workflows/node.js.yml/badge.svg)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
-## Requirements
+# Express-REST-API-Template
 
-- Docker
-- Docker Compose
+Simple express boilerplate based off of [express-generator](https://expressjs.com/en/starter/generator.html). Includes [eslint](https://eslint.org) and [prettier](https://prettier.io) for linting/code formatting, [nodemon](https://github.com/remy/nodemon) for automatic server restarting, and [Jest](https://jestjs.io) for testing.
 
-## Setup
+## Getting Started
 
-```bash
-cp .env.example .env
+### Install dependencies
+
+```
+npm install
 ```
 
-```env
-OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+### Running in development
+
+```
+npm run dev
 ```
 
-## Docker Compose Services Startup
+### Running in production
 
-```bash
-docker-compose up --detach
+```
+npm start
 ```
 
-## Node.js Modules Installation
+Runs on localhost:3000 by default but can be configured using the `PORT` environment variable.
 
-```bash
-docker-compose exec node npm install
+### Running tests
+
+```
+npm test
+
+# Watch repo
+npm run test:watch
 ```
 
-## Node.js Entrypoint Start
-
-```bash
-docker-compose exec node npm start
+### Linting
 ```
+npm run lint
 
-## Docker Compose Services Shutdown
-
-```bash
-docker-compose down --remove-orphans --volumes
+# fix issues
+npm run lint:fix
 ```
-
-## Authors
-
-- KANOUTE Hamidou
-- DEVECI Serkan 
-- JALLU Thomas
