@@ -43,5 +43,4 @@ docker-compose down --remove-orphans --volumes
 
 - KANOUTE Hamidou
 - DEVECI Serkan 
-- LE GOLANNEC Erwan
 - JALLU Thomas
