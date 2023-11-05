@@ -5,8 +5,10 @@ const logger = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 
-const helloWorldRouter = require('./routes/helloWorld');
+// const helloWorldRouter = require('./routes/helloWorld');
 const openAI = require("./routes/chat")
+const loginRouter = require('./routes/auth/login');
+const registerRouter = require('./routes/auth/register');
 
 const errorHandler = require('./middleware/errorHandler');
 
@@ -19,8 +21,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors());
 
-app.use('/api/helloWorld', helloWorldRouter);
+// app.use('/api/helloWorld', helloWorldRouter);
 app.use('/api/send-message', openAI)
+app.use('/api/login', loginRouter);
+app.use('/api/register', registerRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
