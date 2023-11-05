@@ -30,14 +30,8 @@ npm run lint
 npm run lint:fix
 ```
 
-### install prisma studio locally
+### Run prisma migrations
 ```
-npm install -g prisma
+npm run prisma migrate dev
 ```
-
-### run prisma studio
-```
-npx run prisma studio
-```
-
 
