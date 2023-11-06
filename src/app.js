@@ -9,6 +9,7 @@ const cors = require('cors');
 const openAI = require("./routes/chat")
 const loginRouter = require('./routes/auth/login');
 const registerRouter = require('./routes/auth/register');
+const recipesRouter = require('./routes/recipes');
 
 const errorHandler = require('./middleware/errorHandler');
 
@@ -25,6 +26,7 @@ app.use(cors());
 app.use('/api/send-message', openAI)
 app.use('/api/login', loginRouter);
 app.use('/api/register', registerRouter);
+app.use('/api/recipes', recipesRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

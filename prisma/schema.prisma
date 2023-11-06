@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id                    Int                    @id @default(autoincrement())
+  id                    String                 @id @default(uuid())
   username              String
   email                 String                 @unique
   passwordHash          String
@@ -26,12 +26,12 @@ model Recipe {
   id              Int                @id @default(autoincrement())
   title           String
   description     String
-  instructions    String
+  instructions    String[]
   cookingTime     Int
   servings        Int
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
-  authorId        Int
+  authorId        String
   author          User               @relation(fields: [authorId], references: [id])
   accompaniments  Accompaniment[]
   favoriteRecipes FavoriteRecipe[]
@@ -39,6 +39,7 @@ model Recipe {
   ingredients     RecipeIngredient[]
   tags            RecipeTag[]
   shoppingLists   ShoppingList[]
+  image           String
 }
 
 model Ingredient {
@@ -62,7 +63,7 @@ model Rating {
   id        Int      @id @default(autoincrement())
   rating    Int
   comment   String?
-  userId    Int
+  userId    String
   recipeId  Int
   createdAt DateTime @default(now())
   recipe    Recipe   @relation(fields: [recipeId], references: [id])
@@ -71,7 +72,7 @@ model Rating {
 
 model FavoriteRecipe {
   id        Int      @id @default(autoincrement())
-  userId    Int
+  userId    String
   recipeId  Int
   createdAt DateTime @default(now())
   recipe    Recipe   @relation(fields: [recipeId], references: [id])
@@ -87,12 +88,12 @@ model Accompaniment {
 }
 
 model ShoppingList {
-  id       Int    @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   recipeId Int
-  userId   Int?
+  userId   String?
   items    Json
-  recipe   Recipe @relation(fields: [recipeId], references: [id])
-  user     User?  @relation(fields: [userId], references: [id])
+  recipe   Recipe  @relation(fields: [recipeId], references: [id])
+  user     User?   @relation(fields: [userId], references: [id])
 }
 
 model Tag {
@@ -111,7 +112,7 @@ model RecipeTag {
 
 model UserRecipePreference {
   id         Int    @id @default(autoincrement())
-  userId     Int
+  userId     String
   preference String
   user       User   @relation(fields: [userId], references: [id])
 }
