@@ -42,21 +42,11 @@ model Recipe {
   image           String
 }
 
-model Ingredient {
-  id      Int                @id @default(autoincrement())
-  name    String
-  type    String
-  recipes RecipeIngredient[]
-}
-
 model RecipeIngredient {
-  id           Int        @id @default(autoincrement())
-  recipeId     Int
-  ingredientId Int
-  quantity     Float
-  unit         String
-  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
-  recipe       Recipe     @relation(fields: [recipeId], references: [id])
+  id          Int    @id @default(autoincrement())
+  recipeId    Int
+  ingredients Json
+  recipe      Recipe @relation(fields: [recipeId], references: [id])
 }
 
 model Rating {

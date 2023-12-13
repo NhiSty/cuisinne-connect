@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 
 router.get('/', async (req, res) => {
     const page = req.query.page || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
+    const pageSize = parseInt(req.query.pageSize,10) || 10;
     const offset = (page - 1) * pageSize;
 
     try {
@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id,10);
     try {
         const recipe = await prisma.recipe.findUnique({
             where: {
@@ -52,7 +52,7 @@ router.get('/:id', async (req, res) => {
 });
 
 router.get('/:id/rating', async (req, res) => {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id,10);
     try {
         const ratings = await prisma.rating.findMany({
             where: {
@@ -63,6 +63,27 @@ router.get('/:id/rating', async (req, res) => {
         const ratingAverage = ratings.reduce((acc, rating) => acc + rating.rating, 0) / ratings.length;
 
         res.json(ratingAverage);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/:id/ingredient', async (req, res) => {
+    const id = parseInt(req.params.id,10);
+    try {
+       const ingredients = await prisma.recipeIngredient.findFirst({
+            where: {
+                recipeId: id,
+            },
+           
+        });
+
+        if (!ingredients) {
+            return res.status(404).json({ error: 'Ingredients not found' });
+        }
+
+
+        res.json(ingredients.ingredients);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
