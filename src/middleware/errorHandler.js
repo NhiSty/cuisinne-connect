@@ -1,17 +1,29 @@
-const createError = require('http-errors');
+import { errors as vineErrors } from '@vinejs/vine';
+import { AppError } from '../utils/errors.js';
 
-// eslint-disable-next-line no-unused-vars
-const errorHandler = (err, req, res, next) => {
+/**
+ * Express error handler
+ * @param {Error} error Error to handle
+ * @param {import('express').Request} req http request
+ * @param {import('express').Response} res http response
+ * @returns
+ */
+export function errorHandler(error, req, res, next) {
+	if (error instanceof vineErrors.E_VALIDATION_ERROR) {
+		return res.status(400).send({
+			message: error.message,
+			errors: error.messages
+		});
+	}
 
-  // eslint-disable-next-line no-console
-  console.error(err);
+	if (error instanceof AppError) {
+		return res.status(error.status || 500).send({
+			message: error.message
+		});
+	}
 
-  // if the error is safe to expose to client
-  if (err.expose === true) {
-    res.status(err.status || 500).send(err);
-  } else {
-    res.status(500).send(createError.InternalServerError());
-  }
-};
-
-module.exports = errorHandler;
+	console.error(error);
+	res.status(500).send({
+		message: 'Internal Server Error'
+	});
+}

@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "User" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "passwordHash" TEXT NOT NULL,
@@ -16,32 +16,29 @@ CREATE TABLE "Recipe" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
-    "instructions" TEXT NOT NULL,
     "cookingTime" INTEGER NOT NULL,
     "servings" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "authorId" INTEGER NOT NULL,
+    "authorId" TEXT,
 
     CONSTRAINT "Recipe_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "Ingredient" (
+CREATE TABLE "RecipeInstructions" (
     "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "type" TEXT NOT NULL,
+    "recipeId" INTEGER NOT NULL,
+    "instructions" TEXT NOT NULL,
 
-    CONSTRAINT "Ingredient_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "RecipeInstructions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "RecipeIngredient" (
     "id" SERIAL NOT NULL,
     "recipeId" INTEGER NOT NULL,
-    "ingredientId" INTEGER NOT NULL,
-    "quantity" DOUBLE PRECISION NOT NULL,
-    "unit" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
 
     CONSTRAINT "RecipeIngredient_pkey" PRIMARY KEY ("id")
 );
@@ -51,7 +48,7 @@ CREATE TABLE "Rating" (
     "id" SERIAL NOT NULL,
     "rating" INTEGER NOT NULL,
     "comment" TEXT,
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "recipeId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -61,7 +58,7 @@ CREATE TABLE "Rating" (
 -- CreateTable
 CREATE TABLE "FavoriteRecipe" (
     "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "recipeId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -72,8 +69,7 @@ CREATE TABLE "FavoriteRecipe" (
 CREATE TABLE "Accompaniment" (
     "id" SERIAL NOT NULL,
     "recipeId" INTEGER NOT NULL,
-    "type" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
 
     CONSTRAINT "Accompaniment_pkey" PRIMARY KEY ("id")
 );
@@ -82,7 +78,7 @@ CREATE TABLE "Accompaniment" (
 CREATE TABLE "ShoppingList" (
     "id" SERIAL NOT NULL,
     "recipeId" INTEGER NOT NULL,
-    "userId" INTEGER,
+    "userId" TEXT,
     "items" JSONB NOT NULL,
 
     CONSTRAINT "ShoppingList_pkey" PRIMARY KEY ("id")
@@ -108,44 +104,50 @@ CREATE TABLE "RecipeTag" (
 -- CreateTable
 CREATE TABLE "UserRecipePreference" (
     "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "preference" TEXT NOT NULL,
 
     CONSTRAINT "UserRecipePreference_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Recipe_title_key" ON "Recipe"("title");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name");
 
 -- AddForeignKey
-ALTER TABLE "Recipe" ADD CONSTRAINT "Recipe_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Recipe" ADD CONSTRAINT "Recipe_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RecipeInstructions" ADD CONSTRAINT "RecipeInstructions_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "Recipe"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RecipeIngredient" ADD CONSTRAINT "RecipeIngredient_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "Recipe"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "RecipeIngredient" ADD CONSTRAINT "RecipeIngredient_ingredientId_fkey" FOREIGN KEY ("ingredientId") REFERENCES "Ingredient"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Rating" ADD CONSTRAINT "Rating_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "Recipe"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Rating" ADD CONSTRAINT "Rating_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Rating" ADD CONSTRAINT "Rating_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "Recipe"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "FavoriteRecipe" ADD CONSTRAINT "FavoriteRecipe_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "Recipe"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "FavoriteRecipe" ADD CONSTRAINT "FavoriteRecipe_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "FavoriteRecipe" ADD CONSTRAINT "FavoriteRecipe_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "Recipe"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Accompaniment" ADD CONSTRAINT "Accompaniment_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "Recipe"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ShoppingList" ADD CONSTRAINT "ShoppingList_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "ShoppingList" ADD CONSTRAINT "ShoppingList_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "Recipe"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ShoppingList" ADD CONSTRAINT "ShoppingList_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "Recipe"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ShoppingList" ADD CONSTRAINT "ShoppingList_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RecipeTag" ADD CONSTRAINT "RecipeTag_recipeId_fkey" FOREIGN KEY ("recipeId") REFERENCES "Recipe"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

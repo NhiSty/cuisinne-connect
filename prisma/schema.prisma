@@ -17,41 +17,46 @@ model User {
   preferences           Json?
   favoriteRecipes       FavoriteRecipe[]
   ratings               Rating[]
-  recipes               Recipe[]
   shoppingLists         ShoppingList[]
   userRecipePreferences UserRecipePreference[]
+  Recipe                Recipe[]
 }
 
 model Recipe {
-  id              Int                @id @default(autoincrement())
-  title           String
+  id              Int                  @id @default(autoincrement())
+  title           String               @unique
   description     String
-  instructions    String[]
+  instructions    RecipeInstructions[]
   cookingTime     Int
   servings        Int
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  authorId        String
-  author          User               @relation(fields: [authorId], references: [id])
-  accompaniments  Accompaniment[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
   favoriteRecipes FavoriteRecipe[]
   ratings         Rating[]
   ingredients     RecipeIngredient[]
   tags            RecipeTag[]
   shoppingLists   ShoppingList[]
-  image           String
+  author          User?                @relation(fields: [authorId], references: [id])
+  authorId        String?
+}
+
+model RecipeInstructions {
+  id           Int    @id @default(autoincrement())
+  recipeId     Int
+  instructions String
+  recipe       Recipe @relation(fields: [recipeId], references: [id])
 }
 
 model RecipeIngredient {
-  id          Int    @id @default(autoincrement())
-  recipeId    Int
-  ingredients Json
-  recipe      Recipe @relation(fields: [recipeId], references: [id])
+  id       Int    @id @default(autoincrement())
+  recipeId Int
+  name     String
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
 }
 
 model Rating {
   id        Int      @id @default(autoincrement())
-  rating    Int
+  rating    Float
   comment   String?
   userId    String
   recipeId  Int
@@ -67,14 +72,6 @@ model FavoriteRecipe {
   createdAt DateTime @default(now())
   recipe    Recipe   @relation(fields: [recipeId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
-}
-
-model Accompaniment {
-  id          Int    @id @default(autoincrement())
-  recipeId    Int
-  type        String
-  description String
-  recipe      Recipe @relation(fields: [recipeId], references: [id])
 }
 
 model ShoppingList {
