@@ -1,6 +1,5 @@
-import { db } from '../database.js';
-import { NotFoundError } from '../utils/errors.js';
-import { generateRecipe, generateRecipeSideDish } from './gpt.service.js';
+import {db} from '../database.js';
+import {generateRecipe, generateRecipeSideDish} from './gpt.service.js';
 
 export async function getRecipe(name, currentUser = null) {
 	const recipe = await db.recipe.findUnique({
@@ -95,13 +94,42 @@ export async function getRecipeRatings(name) {
 		return null;
 	}
 
-	return ratings._avg.rating || 0;
+	const val = ratings._avg.rating || 0;
+
+	return Math.round(val * 10) / 10;
 }
 
 export async function getRecipeSideDish(name) {
-	
-	const dishes = await generateRecipeSideDish(name);
-	return dishes;
+	return await generateRecipeSideDish(name);
 }
 
+export async function isRecipeInUserFavorites(user, recipe) {
+	const isInFavorites = await db.favoriteRecipe.findFirst({
+		where: {
+			userId: user.id,
+			recipeId: recipe.id
+		}
+	});
 
+	return isInFavorites != null;
+}
+
+export async function toggleInFavorites(user, recipe) {
+	const favorite = await db.favoriteRecipe.findFirst({
+		where: {
+			userId: user.id,
+			recipeId: recipe.id
+		}
+	});
+
+	if (favorite != null) {
+		await db.favoriteRecipe.delete({ where: { id: favorite.id } });
+	} else {
+		await db.favoriteRecipe.create({
+			data: {
+				recipeId: recipe.id,
+				userId: user.id
+			}
+		});
+	}
+}

@@ -10,5 +10,6 @@ export function guestOnlyMiddleware(req, res, next) {
 			message: 'Unauthorized'
 		});
 	}
+
 	next();
 }

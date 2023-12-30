@@ -8,18 +8,20 @@ datasource db {
 }
 
 model User {
-  id                    String                 @id @default(uuid())
-  username              String
-  email                 String                 @unique
-  passwordHash          String
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  preferences           Json?
-  favoriteRecipes       FavoriteRecipe[]
-  ratings               Rating[]
-  shoppingLists         ShoppingList[]
-  userRecipePreferences UserRecipePreference[]
-  Recipe                Recipe[]
+  id              String           @id @default(uuid())
+  username        String
+  email           String           @unique
+  passwordHash    String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  favoriteRecipes FavoriteRecipe[]
+  ratings         Rating[]
+  Recipe          Recipe[]
+
+  diets       UserDiet[]
+  allergies   UserAllergy[]
+  preferences UserPreference[]
+  Comment     Comment[]
 }
 
 model Recipe {
@@ -34,10 +36,9 @@ model Recipe {
   favoriteRecipes FavoriteRecipe[]
   ratings         Rating[]
   ingredients     RecipeIngredient[]
-  tags            RecipeTag[]
-  shoppingLists   ShoppingList[]
   author          User?                @relation(fields: [authorId], references: [id])
   authorId        String?
+  Comment         Comment[]
 }
 
 model RecipeInstructions {
@@ -55,14 +56,39 @@ model RecipeIngredient {
 }
 
 model Rating {
-  id        Int      @id @default(autoincrement())
-  rating    Float
-  comment   String?
-  userId    String
-  recipeId  Int
+  id     Int @id @default(autoincrement())
+  rating Int
+
+  comment   Comment @relation(fields: [commentId], references: [id])
+  commentId Int
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  recipeId Int
+
   createdAt DateTime @default(now())
-  recipe    Recipe   @relation(fields: [recipeId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, recipeId])
+}
+
+model Comment {
+  id      Int    @id @default(autoincrement())
+  content String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  recipeId Int
+
+  children Comment[] @relation("comment_children")
+  parent   Comment?  @relation("comment_children", fields: [parentId], references: [id])
+  parentId Int?
+
+  createdAt DateTime @default(now())
+  Rating    Rating[]
 }
 
 model FavoriteRecipe {
@@ -74,32 +100,29 @@ model FavoriteRecipe {
   user      User     @relation(fields: [userId], references: [id])
 }
 
-model ShoppingList {
-  id       Int     @id @default(autoincrement())
-  recipeId Int
-  userId   String?
-  items    Json
-  recipe   Recipe  @relation(fields: [recipeId], references: [id])
-  user     User?   @relation(fields: [userId], references: [id])
+// ==================================
+// User preferences
+// ==================================
+model UserDiet {
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  diet String
 }
 
-model Tag {
-  id      Int         @id @default(autoincrement())
-  name    String      @unique
-  recipes RecipeTag[]
+model UserAllergy {
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  allergy String
 }
 
-model RecipeTag {
-  id       Int    @id @default(autoincrement())
-  recipeId Int
-  tagId    Int
-  recipe   Recipe @relation(fields: [recipeId], references: [id])
-  tag      Tag    @relation(fields: [tagId], references: [id])
-}
+model UserPreference {
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-model UserRecipePreference {
-  id         Int    @id @default(autoincrement())
-  userId     String
   preference String
-  user       User   @relation(fields: [userId], references: [id])
 }

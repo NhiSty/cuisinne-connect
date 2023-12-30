@@ -1,22 +1,22 @@
 import vine from '@vinejs/vine';
 
 /*
-*	seasonalRecipesValidator
-*/
+ *	seasonalRecipesValidator
+ */
 const seasonalRecipesSchema = vine.object({
 	recipes: vine.array(vine.string())
 });
 export const seasonalRecipesValidator = vine.compile(seasonalRecipesSchema);
 
 /*
-*	recipeSearchParamValidator
-*/
+ *	recipeSearchParamValidator
+ */
 const recipeSearchParamSchema = vine.string().minLength(1);
 export const recipeSearchParamValidator = vine.compile(recipeSearchParamSchema);
 
 /*
-*	gptSortedRecipesValidator
-*/
+ *	gptSortedRecipesValidator
+ */
 const gptSortedRecipesSchema = vine.object({
 	results: vine.array(
 		vine.object({
@@ -28,14 +28,14 @@ const gptSortedRecipesSchema = vine.object({
 export const gptSortedRecipesValidator = vine.compile(gptSortedRecipesSchema);
 
 /*
-*	recipeNameParamValidator
-*/
+ *	recipeNameParamValidator
+ */
 const recipeNameParamSchema = vine.string().minLength(1);
 export const recipeNameParamValidator = vine.compile(recipeNameParamSchema);
 
 /*
-*	gptGeneratedRecipeValidator
-*/
+ *	gptGeneratedRecipeValidator
+ */
 const gptGeneratedRecipe = vine.object({
 	title: vine.string(),
 	description: vine.string(),
@@ -47,26 +47,40 @@ const gptGeneratedRecipe = vine.object({
 export const gptGeneratedRecipeValidator = vine.compile(gptGeneratedRecipe);
 
 /*
-*	gptGeneratedSideDishesValidator
-*/
+ *	gptGeneratedSideDishesValidator
+ */
 const gptGeneratedSideDishes = vine.object({
 	sideDishes: vine.array(vine.string())
 });
 export const gptGeneratedSideDishesValidator = vine.compile(gptGeneratedSideDishes);
 
 /*
-*	recipeCommentSchemaValidator
-*/
-const recipeCommentSchema = vine.object({
-	rating: vine.number().decimal([1, 5]),
+ *	recipeRatingValidator
+ */
+const recipeRatingSchema = vine.object({
+	rating: vine.number().min(1).max(5).decimal([0, 1]),
 	comment: vine.string().optional()
 });
-export const recipeCommentSchemaValidator = vine.compile(recipeCommentSchema);
+export const recipeRatingValidator = vine.compile(recipeRatingSchema);
 
 /*
-*	recipeListCourse
-*/
+ *	commentIdParamValidator
+ */
+const commentIdParamSchema = vine.number().min(1);
+export const commentIdParamValidator = vine.compile(commentIdParamSchema);
+
+/*
+ *	recipeCommentValidator
+ */
+const recipeCommentSchema = vine.object({
+	comment: vine.string().optional()
+});
+export const recipeCommentValidator = vine.compile(recipeCommentSchema);
+
+/*
+ *	recipeListCourse
+ */
 const gptGeneratesListCourse = vine.object({
-	listCourse: vine.array(vine.string())	
+	listCourse: vine.array(vine.string())
 });
 export const recipeListCourse = vine.compile(gptGeneratesListCourse);

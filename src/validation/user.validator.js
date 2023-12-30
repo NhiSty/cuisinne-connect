@@ -21,8 +21,6 @@ const unique = vine.createRule(async (value, option, field) => {
 
 	const user = await db.user.findFirst({ where: { [option.field]: value } });
 
-	console.log(user);
-
 	if (user) {
 		field.report('The {{ field }} field is not unique', 'unique', field);
 	}
@@ -46,3 +44,10 @@ const userRegisterSchema = vine.object({
 	password: vine.string().minLength(6).confirmed({ confirmationField: 'confirmation' })
 });
 export const userRegisterValidator = vine.compile(userRegisterSchema);
+
+const userSettingsSchema = vine.object({
+	diets: vine.array(vine.string()),
+	allergies: vine.array(vine.string()),
+	preferences: vine.array(vine.string())
+});
+export const userSettingsValidator = vine.compile(userSettingsSchema);

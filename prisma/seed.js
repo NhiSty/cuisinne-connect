@@ -1,66 +1,104 @@
 import { PrismaClient } from '@prisma/client';
+import argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Création d'une recette
-  const recipe = await prisma.recipe.create({
-    data: {
-      title: 'Gâteau choco-banane',
-      cookingTime: 45,
-      instructions: {
-        createMany: {
-          data: [
-            'Préchauffez votre four à 180°C (350°F) et graissez un moule à gâteau de 20 cm (8 pouces).',
-            "Dans un bol, écrasez les bananes mûres avec une fourchette jusqu'à obtenir une purée lisse.",
-            "Ajoutez le cacao en poudre et l'extrait de vanille à la purée de banane. Mélangez bien pour incorporer le cacao.",
-            'Dans un autre bol, mélangez la farine, le bicarbonate de soude et le sel.',
-            "Dans un troisième bol, battez les œufs, le sucre et l'huile jusqu'à obtenir un mélange homogène.",
-          ].map((instructions) => ({ instructions })),
-        },
-      },
-      servings: 8,
-      description: 'Un gâteau moelleux et délicieux, parfait pour le goûter !',
-    },
-  });
+	// Création d'un utilisateur
+	const passwordHash = await argon2.hash('test123');
+	const user = await prisma.user.create({
+		data: {
+			username: 'sdev',
+			email: 'sdev@test.fr',
+			passwordHash,
+			diets: {
+				create: [{ diet: 'Sans sucre' }]
+			},
+			allergies: {
+				create: [{ allergy: 'Kiwi' }, { allergy: 'Oeuf' }]
+			},
+			preferences: {
+				create: [{ preference: 'Pimenté' }, { preference: 'Sans alcool' }]
+			}
+		}
+	});
 
-  // Ajout des ingrédients de la recette
-  // Ajout des ingrédients de la recette
-await prisma.recipeIngredient.create({
-	data: {
-	  recipeId: recipe.id,
-	  ingredients: {
-		create: [
-		  { name: 'banane', quantity: 2, unit: 'unité' },
-		  { name: 'cacao en poudre', quantity: 2, unit: 'cuillère à soupe' },
-		  { name: 'farine', quantity: 150, unit: 'gramme' },
-		  { name: 'bicarbonate de soude', quantity: 1, unit: 'cuillère à café' },
-		  { name: 'sel', quantity: 1, unit: 'pincée' },
-		  { name: 'œuf', quantity: 2, unit: 'unité' },
-		  { name: 'sucre', quantity: 100, unit: 'gramme' },
-		  { name: 'huile', quantity: 100, unit: 'gramme' },
-		  { name: 'extrait de vanille', quantity: 1, unit: 'cuillère à café' },
-		  { name: 'sucre glace', quantity: 2, unit: 'cuillère à soupe' },
-		  { name: 'lait', quantity: 1, unit: 'cuillère à soupe' },
-		  { name: 'pépites de chocolat', quantity: 50, unit: 'gramme' },
-		  { name: 'noix', quantity: 50, unit: 'gramme' },
-		  { name: 'noix de coco râpée', quantity: 50, unit: 'gramme' },
-		  { name: 'amande effilée', quantity: 50, unit: 'gramme' },
-		  { name: 'noisette', quantity: 50, unit: 'gramme' },
-		  { name: 'pistache', quantity: 50, unit: 'gramme' },
-		  { name: 'poudre d\'amande', quantity: 50, unit: 'gramme' },
-		],
-	  },
-	},
-  });
+	// Création d'une recette
+	const recipe = await prisma.recipe.create({
+		data: {
+			title: 'Poulet rôti aux champignons',
+			description:
+				"Un délicieux plat de poulet rôti accompagné d'une sauce onctueuse aux champignons.",
+			cookingTime: 60,
+			servings: 4,
+			instructions: {
+				createMany: {
+					data: [
+						{ instructions: 'Préchauffez le four à 200°C.' },
+						{ instructions: "Nettoyez et émincez les champignons, l'ail et l'oignon." },
+						{ instructions: "Faites chauffer un peu d'huile d'olive dans une poêle et faites revenir l'ail et l'oignon." },
+						{ instructions: 'Ajoutez les champignons et laissez-les dorer quelques minutes.' },
+						{ instructions: 'Ajoutez le bouillon de poulet et la crème fraîche. Laissez mijoter quelques minutes.' },
+						{ instructions: 'Pendant ce temps, assaisonnez le poulet avec du sel, du poivre et des herbes de Provence.' },
+						{ instructions: 'Placez le poulet dans un plat allant au four et enfournez-le pendant environ 50 minutes.' },
+						{ instructions: 'Servez le poulet rôti accompagné de la sauce aux champignons.' }
+					]
+				}
+			},
+			ingredients: {
+				createMany: {
+					data: [
+						{ name: '1 poulet entier' },
+						{ name: '500g de champignons de Paris' },
+						{ name: "2 gousses d'ail" },
+						{ name: '1 oignon' },
+						{ name: '200ml de bouillon de poulet' },
+						{ name: '2 cuillères à soupe de crème fraîche' },
+						{ name: 'Herbes de Provence' },
+						{ name: "Huile d'olive" },
+						{ name: 'Sel' },
+						{ name: 'Poivre' }
+					]
+				}
+			},
+			authorId: user.id
+		}
+	});
+
+	// Création d'un commentaire
+	const comment = await prisma.comment.create({
+		data: {
+			content: 'Super recette !',
+			userId: user.id,
+			recipeId: recipe.id
+		}
+	});
+
+	// Création d'une note
+	const rating = await prisma.rating.create({
+		data: {
+			rating: 5,
+			commentId: comment.id,
+			userId: user.id,
+			recipeId: recipe.id
+		}
+	});
+
+	// Ajout de la recette aux favoris
+	const favoriteRecipe = await prisma.favoriteRecipe.create({
+		data: {
+			userId: user.id,
+			recipeId: recipe.id
+		}
+	});
+
+	console.log('Database seeded');
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    console.log('Terminé');
-    await prisma.$disconnect();
-  });
+	.catch((e) => {
+		throw e;
+	})
+	.finally(async () => {
+		await prisma.$disconnect();
+	});

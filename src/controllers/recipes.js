@@ -2,18 +2,23 @@ import { db } from '../database.js';
 import { promptToGPT, searchAndSortRecipes } from '../services/gpt.service.js';
 import {
 	getAllRecipes,
+	getLastRecipeFromDb,
 	getRecipe,
 	getRecipeRatings,
 	getRecipeSideDish,
-	getLastRecipeFromDb
+	isRecipeInUserFavorites,
+	toggleInFavorites
 } from '../services/recipes.service.js';
 import {
-	recipeCommentSchemaValidator,
-	recipeListCourse,
+	commentIdParamValidator,
+	recipeRatingValidator,
 	recipeNameParamValidator,
+	recipeListCourse,
 	recipeSearchParamValidator,
-	seasonalRecipesValidator
+	seasonalRecipesValidator,
+	recipeCommentValidator
 } from '../validation/recipes.validator.js';
+import { getUserFavorites } from '../services/user.service.js';
 
 /**
  *
@@ -23,10 +28,8 @@ import {
 export async function getRecipesController(req, res) {
 	const userInput = await recipeSearchParamValidator.validate(req.query.search);
 
-	// Get all the recipes names
 	const recipes = await getAllRecipes();
 
-	// Ask GPT to search recipes based on the user input
 	const { results } = await searchAndSortRecipes(recipes, userInput);
 
 	res.status(200).send({ items: results });
@@ -35,15 +38,54 @@ export async function getRecipesController(req, res) {
 export async function getRecipeController(req, res) {
 	const name = await recipeNameParamValidator.validate(req.params.name);
 	const recipe = await getRecipe(name, req.user);
+	let isInFavorites;
 
-	res.json(recipe);
+	if (req.user) {
+		isInFavorites = await isRecipeInUserFavorites(req.user, recipe);
+	}
+
+	res.json({
+		...recipe,
+		isFavorite: isInFavorites
+	});
 }
 
-export async function getRecipeRatingController(req, res) {
+/**
+ * Fetch recipe comments from database
+ * @param {import('express').Request} req Express http request
+ * @param {import('express').Response} res Express http response
+ */
+export async function getRecipeRatingsController(req, res) {
 	const name = await recipeNameParamValidator.validate(req.params.name);
-	const rating = await getRecipeRatings(name);
+	const recipe = await getRecipe(name);
 
-	res.json({ rating });
+	const ratings = await db.rating.findMany({
+		where: {
+			recipeId: recipe.id
+		},
+		include: {
+			user: true,
+			comment: true
+		},
+		orderBy: {
+			createdAt: 'desc'
+		}
+	});
+
+	let hasVoted = false;
+
+	if (req.user) {
+		const comment = await db.rating.findFirst({
+			where: {
+				recipeId: recipe.id,
+				userId: req.user.id
+			}
+		});
+
+		hasVoted = comment !== null;
+	}
+
+	res.json({ ratings, hasVoted });
 }
 
 export async function getRecipeIngredientsController(req, res) {
@@ -56,6 +98,84 @@ export async function getRecipeIngredientsController(req, res) {
 	}
 
 	res.json(ingredients);
+}
+
+/**
+ * Toggle favorite state for a recipe
+ * @param {import('express').Request} req Express http request
+ * @param {import('express').Response} res Express http response
+ */
+export async function updateRecipeFavoriteForUser(req, res) {
+	const name = await recipeNameParamValidator.validate(req.params.name);
+	const recipe = await getRecipe(name);
+
+	await toggleInFavorites(req.user, recipe);
+
+	res.sendStatus(204);
+}
+
+/**
+ * Fetch user favorites recipes
+ */
+export async function getUserFavoritesController(req, res) {
+	const recipes = await getUserFavorites(req.user);
+
+	res.json({ items: recipes });
+}
+
+/**
+ * Fetch comment responses
+ */
+export async function getCommentResponseController(req, res) {
+	const name = await recipeNameParamValidator.validate(req.params.name);
+	const id = await commentIdParamValidator.validate(req.params.id);
+	const recipe = await getRecipe(name);
+
+	const comments = await db.comment.findMany({
+		where: {
+			recipeId: recipe.id,
+			parentId: id
+		},
+		orderBy: {
+			createdAt: 'desc'
+		},
+		include: {
+			user: true
+		}
+	});
+
+	res.json(comments);
+}
+
+/**
+ * Post a new comment response into database
+ * @param {import('express').Request} req Express http request
+ * @param {import('express').Response} res Express http response
+ */
+export async function postCommentController(req, res) {
+	const name = await recipeNameParamValidator.validate(req.params.name);
+	const id = await commentIdParamValidator.validate(req.params.id);
+	const recipe = await getRecipe(name);
+
+	const data = await recipeCommentValidator.validate(req.body);
+
+	const newComment = await db.comment.create({
+		data: {
+			content: data.comment,
+			recipeId: recipe.id,
+			userId: req.user.id,
+			parentId: id
+		}
+	});
+
+	res.json(newComment);
+}
+
+export async function getRecipeRatingController(req, res) {
+	const name = await recipeNameParamValidator.validate(req.params.name);
+	const rating = await getRecipeRatings(name);
+
+	res.json({ rating });
 }
 
 /**
@@ -157,41 +277,11 @@ export async function getRecipeCommentsController(req, res) {
 }
 
 /**
- * Post a new comment into database
- * @param {import('express').Request} req Express http request
- * @param {import('express').Response} res Express http response
- */
-export async function postCommentPostCommentController(req, res) {
-
-	req.body.rating = parseFloat(req.body.rating);
-
-	const name = await recipeNameParamValidator.validate(req.params.name);
-
-	const recipe = await getRecipe(name);
-
-
-	const data = await recipeCommentSchemaValidator.validate(req.body);
-
-	const comment = await db.rating.create({
-		data: {
-			rating: data.rating,
-			comment: data.comment,
-			recipeId: recipe.id,
-			userId: req.user.id
-		}
-	});
-
-	res.json(comment);
-}
-
-
-/**
  * Get last recipe from database
  * @param {import('express').Request} req Express http request
  * @param {import('express').Response} res Express http response
  */
 export async function getLastRecipe(req, res) {
-	
 	const recipe = await getLastRecipeFromDb();
 	console.log(recipe);
 	res.json(recipe);
@@ -206,11 +296,15 @@ export async function getListCourse(req, res) {
 	const name = await recipeNameParamValidator.validate(req.params.name);
 	const recipe = await getRecipe(name);
 
-	const ingredients = await db.recipeIngredient.findMany({ where: { recipe: { title: name }} });
+	const ingredients = await db.recipeIngredient.findMany({ where: { recipe: { title: name } } });
 
 	const gptResponse = await promptToGPT(
 		`Je veux une liste de courses pour ${recipe.title}.
-		Je veux que tu te bases sur les ingrédients de la recette qui sont les suivants : ${ingredients.map((i) => i.name).join(', ')} et que tu ajoutes a la liste les éléments manquants, tel que le sel, le poivre, etc et les ustensiles de cuisine.
+		Je veux que tu te bases sur les ingrédients de la recette qui sont les suivants : ${ingredients
+			.map((i) => i.name)
+			.join(
+				', '
+			)} et que tu ajoutes a la liste les éléments manquants, tel que le sel, le poivre, etc et les ustensiles de cuisine.
 	
 		La réponse doit être en français.
 
@@ -225,4 +319,44 @@ export async function getListCourse(req, res) {
 	const data = await recipeListCourse.validate(obj);
 
 	res.json(data);
+}
+
+/**
+ * Post a new comment into database
+ * @param {import('express').Request} req Express http request
+ * @param {import('express').Response} res Express http response
+ */
+export async function postRatingController(req, res) {
+	const name = await recipeNameParamValidator.validate(req.params.name);
+	const recipe = await getRecipe(name);
+
+	const userComment = await db.rating.findFirst({
+		where: {
+			recipeId: recipe.id,
+			userId: req.user.id
+		}
+	});
+
+	if (userComment) {
+		return res.status(400).json({ error: 'You have already voted for this recipe' });
+	}
+
+	const data = await recipeRatingValidator.validate(req.body);
+
+	const newComment = await db.rating.create({
+		data: {
+			rating: data.rating,
+			comment: {
+				create: {
+					content: data.comment,
+					recipeId: recipe.id,
+					userId: req.user.id
+				}
+			},
+			recipe: { connect: { id: recipe.id } },
+			user: { connect: { id: req.user.id } }
+		}
+	});
+
+	res.json(newComment);
 }

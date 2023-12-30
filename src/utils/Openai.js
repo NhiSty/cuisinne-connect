@@ -21,7 +21,7 @@ export class OpenAIChat {
 			const completion = await this.openai.chat.completions.create({
 				messages: this.conversation,
 				model: this.model
-				//maxTokens: 300,
+				// maxTokens: 300,
 			});
 
 			const assistantResponse = completion.choices[0].message.content;

@@ -22,7 +22,7 @@ app.use(userSessionMiddleware);
 setupRoutes(app);
 
 // handle 404 routes
-app.all('*', function (req, res) {
+app.all('*', (req, res) => {
 	throw new NotFoundError();
 });
 

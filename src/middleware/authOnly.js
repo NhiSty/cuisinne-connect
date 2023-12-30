@@ -10,5 +10,6 @@ export function authOnlyMiddleware(req, res, next) {
 			message: 'Unauthorized'
 		});
 	}
+
 	next();
 }
