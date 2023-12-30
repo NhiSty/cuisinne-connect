@@ -8,66 +8,87 @@ datasource db {
 }
 
 model User {
-  id                    String                 @id @default(uuid())
-  username              String
-  email                 String                 @unique
-  passwordHash          String
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  preferences           Json?
-  favoriteRecipes       FavoriteRecipe[]
-  ratings               Rating[]
-  recipes               Recipe[]
-  shoppingLists         ShoppingList[]
-  userRecipePreferences UserRecipePreference[]
+  id              String           @id @default(uuid())
+  username        String
+  email           String           @unique
+  passwordHash    String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  favoriteRecipes FavoriteRecipe[]
+  ratings         Rating[]
+  Recipe          Recipe[]
+
+  diets       UserDiet[]
+  allergies   UserAllergy[]
+  preferences UserPreference[]
+  Comment     Comment[]
 }
 
 model Recipe {
-  id              Int                @id @default(autoincrement())
-  title           String
+  id              Int                  @id @default(autoincrement())
+  title           String               @unique
   description     String
-  instructions    String[]
+  instructions    RecipeInstructions[]
   cookingTime     Int
   servings        Int
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  authorId        String
-  author          User               @relation(fields: [authorId], references: [id])
-  accompaniments  Accompaniment[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
   favoriteRecipes FavoriteRecipe[]
   ratings         Rating[]
   ingredients     RecipeIngredient[]
-  tags            RecipeTag[]
-  shoppingLists   ShoppingList[]
-  image           String
+  author          User?                @relation(fields: [authorId], references: [id])
+  authorId        String?
+  Comment         Comment[]
 }
 
-model Ingredient {
-  id      Int                @id @default(autoincrement())
-  name    String
-  type    String
-  recipes RecipeIngredient[]
+model RecipeInstructions {
+  id           Int    @id @default(autoincrement())
+  recipeId     Int
+  instructions String
+  recipe       Recipe @relation(fields: [recipeId], references: [id])
 }
 
 model RecipeIngredient {
-  id           Int        @id @default(autoincrement())
-  recipeId     Int
-  ingredientId Int
-  quantity     Float
-  unit         String
-  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
-  recipe       Recipe     @relation(fields: [recipeId], references: [id])
+  id       Int    @id @default(autoincrement())
+  recipeId Int
+  name     String
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
 }
 
 model Rating {
-  id        Int      @id @default(autoincrement())
-  rating    Int
-  comment   String?
-  userId    String
-  recipeId  Int
+  id     Int @id @default(autoincrement())
+  rating Int
+
+  comment   Comment @relation(fields: [commentId], references: [id])
+  commentId Int
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  recipeId Int
+
   createdAt DateTime @default(now())
-  recipe    Recipe   @relation(fields: [recipeId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, recipeId])
+}
+
+model Comment {
+  id      Int    @id @default(autoincrement())
+  content String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  recipeId Int
+
+  children Comment[] @relation("comment_children")
+  parent   Comment?  @relation("comment_children", fields: [parentId], references: [id])
+  parentId Int?
+
+  createdAt DateTime @default(now())
+  Rating    Rating[]
 }
 
 model FavoriteRecipe {
@@ -79,40 +100,29 @@ model FavoriteRecipe {
   user      User     @relation(fields: [userId], references: [id])
 }
 
-model Accompaniment {
-  id          Int    @id @default(autoincrement())
-  recipeId    Int
-  type        String
-  description String
-  recipe      Recipe @relation(fields: [recipeId], references: [id])
+// ==================================
+// User preferences
+// ==================================
+model UserDiet {
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  diet String
 }
 
-model ShoppingList {
-  id       Int     @id @default(autoincrement())
-  recipeId Int
-  userId   String?
-  items    Json
-  recipe   Recipe  @relation(fields: [recipeId], references: [id])
-  user     User?   @relation(fields: [userId], references: [id])
+model UserAllergy {
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  allergy String
 }
 
-model Tag {
-  id      Int         @id @default(autoincrement())
-  name    String      @unique
-  recipes RecipeTag[]
-}
+model UserPreference {
+  id     Int    @id @default(autoincrement())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-model RecipeTag {
-  id       Int    @id @default(autoincrement())
-  recipeId Int
-  tagId    Int
-  recipe   Recipe @relation(fields: [recipeId], references: [id])
-  tag      Tag    @relation(fields: [tagId], references: [id])
-}
-
-model UserRecipePreference {
-  id         Int    @id @default(autoincrement())
-  userId     String
   preference String
-  user       User   @relation(fields: [userId], references: [id])
 }

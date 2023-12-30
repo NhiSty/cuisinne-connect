@@ -30,8 +30,17 @@ npm run lint
 npm run lint:fix
 ```
 
-### Run prisma migrations
+### Run prisma migrations inside docker container
 ```
-npm run prisma migrate dev
+docker compose exec npm run prisma migrate dev
 ```
 
+### Clean database data inside docker container
+```
+docker compose exec node prisma/clean_db.js
+```
+
+### Run seeder inside docker container
+```
+docker compose exec node prisma/seed.js
+```
