@@ -33,34 +33,38 @@ export async function promptToGPT(prompt) {
 
 /**
  * Sort and search recipes based on database entries and GPT knowledges
- * @param {{ title: string; summary: string}[]} recipes List of recipes names from the database
  * @param {string} input User input to search recipes
- * @returns {Promise<string[]>} List of recipes sorted by GPT
+ * @param {import('@prisma/client').User} user User object
+ * @returns {Promise<{ title: string; description: string }[]>} List of recipes sorted by GPT
  */
-export async function searchAndSortRecipes(recipes, input) {
+export async function searchAndSortRecipes(input, user) {
 	const now = new Date();
 	const month = now.getMonth();
+
+	let preferences = '';
+
+	if (user) {
+		preferences = `
+		L'utilisateur:
+		- est allergique à: $$$${user.allergies.map((a) => a.name).join(', ')}$$$;
+		- a le régime: $$$${user.diets.map((d) => d.diet).join(', ')}$$$;
+		- a les préférences: $$$${user.preferences.map((p) => p.preference).join(', ')}$$$;
+		`;
+	}
 
 	const result = await promptToGPT(`
 	Tu es un chef cuisinier étoilé, réputé pour tes talents culinaires du monde entier.
 	L'utilisateur recherche des recettes avec le mot-clé suivant : $$${input}$$. 
 	
-	Parmi les recettes de la base de données, veuillez filtrer celles qui correspondent à la recherche de l'utilisateur.
+	Génère des recettes qui correspondent à la recherche de l'utilisateur.
 	Ensuite, triez-les en fonction de leur pertinence par rapport à la recherche de l'utilisateur.
-	De plus, comme nous sommes au ${month + 1}ème mois de l'année, veuillez mettre en avant les
+	De plus, comme nous sommes au ${month + 1}ème mois de l'année, met en avant les
 	recettes qui utilisent des ingrédients de saison.
-
-	Il doit absolument y avoir 8 éléments, si ce n'est pas le cas, proposez de nouvelles recettes qui
-	pourraient intéresser l'utilisateur.
-
-	Garde les nom exactement à l'identique de ceux fournit depuis la base de donnée.
 	Tous les noms doivent être en français dès que possible.
+	
+	${preferences}
 
-	Recettes venant de la base de donnée:
-	${recipes.map((r) => `- ${r.title} : ${r.description}`).join('\n')}
-	[FIN DE LISTE]
-
-	Schéma de réponse (8 éléments):
+	Schéma de réponse (10 éléments):
 	{
 		"results": [
 			{
