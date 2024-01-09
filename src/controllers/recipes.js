@@ -1,9 +1,10 @@
 import { db } from '../database.js';
 import { promptToGPT, searchAndSortRecipes } from '../services/gpt.service.js';
 import {
-	getAllRecipes,
+	findRecipesByName,
 	getLastRecipeFromDb,
 	getRecipe,
+	getRecipeOrGenerate,
 	getRecipeRatings,
 	getRecipeSideDish,
 	isRecipeInUserFavorites,
@@ -28,16 +29,16 @@ import { getUserFavorites } from '../services/user.service.js';
 export async function getRecipesController(req, res) {
 	const userInput = await recipeSearchParamValidator.validate(req.query.search);
 
-	const recipes = await getAllRecipes();
+	const recipes = await findRecipesByName(userInput);
 
-	const { results } = await searchAndSortRecipes(recipes, userInput);
+	const { results } = await searchAndSortRecipes(userInput, req.user);
 
-	res.status(200).send({ items: results });
+	res.status(200).send({ items: [...results, ...recipes] });
 }
 
 export async function getRecipeController(req, res) {
 	const name = await recipeNameParamValidator.validate(req.params.name);
-	const recipe = await getRecipe(name, req.user);
+	const recipe = await getRecipeOrGenerate(name, req.user);
 	let isInFavorites;
 
 	if (req.user) {
@@ -94,7 +95,9 @@ export async function getRecipeIngredientsController(req, res) {
 	const ingredients = await db.recipeIngredient.findMany({ where: { recipeId: recipe.id } });
 
 	if (!ingredients) {
-		return res.status(404).json({ error: 'Ingredients not found' });
+		res.status(404).json({ error: 'Ingredients not found' });
+
+		return;
 	}
 
 	res.json(ingredients);
@@ -131,6 +134,12 @@ export async function getCommentResponseController(req, res) {
 	const id = await commentIdParamValidator.validate(req.params.id);
 	const recipe = await getRecipe(name);
 
+	if (!recipe) {
+		res.status(404).json({ error: 'Recipe not found' });
+
+		return;
+	}
+
 	const comments = await db.comment.findMany({
 		where: {
 			recipeId: recipe.id,
@@ -156,6 +165,12 @@ export async function postCommentController(req, res) {
 	const name = await recipeNameParamValidator.validate(req.params.name);
 	const id = await commentIdParamValidator.validate(req.params.id);
 	const recipe = await getRecipe(name);
+
+	if (!recipe) {
+		res.status(404).json({ error: 'Recipe not found' });
+
+		return;
+	}
 
 	const data = await recipeCommentValidator.validate(req.body);
 
@@ -283,7 +298,6 @@ export async function getRecipeCommentsController(req, res) {
  */
 export async function getLastRecipe(req, res) {
 	const recipe = await getLastRecipeFromDb();
-	console.log(recipe);
 	res.json(recipe);
 }
 

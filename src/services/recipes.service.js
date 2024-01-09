@@ -1,7 +1,7 @@
-import {db} from '../database.js';
-import {generateRecipe, generateRecipeSideDish} from './gpt.service.js';
+import { db } from '../database.js';
+import { generateRecipe, generateRecipeSideDish } from './gpt.service.js';
 
-export async function getRecipe(name, currentUser = null) {
+export async function getRecipe(name) {
 	const recipe = await db.recipe.findUnique({
 		where: {
 			title: name
@@ -11,6 +11,12 @@ export async function getRecipe(name, currentUser = null) {
 			author: true
 		}
 	});
+
+	return recipe;
+}
+
+export async function getRecipeOrGenerate(name, currentUser = null) {
+	const recipe = await getRecipe(name);
 
 	if (recipe) return recipe;
 
@@ -50,15 +56,27 @@ export async function getRecipe(name, currentUser = null) {
 export async function getManyRecipes(name) {
 	const recipe = await db.recipe.findMany({
 		where: {
-			title: name
+			title: {
+
+			}
 		}
 	});
 
 	return recipe;
 }
 
-export async function getAllRecipes() {
+export async function findRecipesByName(name) {
 	return db.recipe.findMany({
+		where: {
+			title: {
+				equals: `%${name}%`,
+				mode: 'insensitive'
+			}
+		},
+		orderBy: {
+			createdAt: 'desc',
+		},
+		take: 5,
 		select: {
 			title: true,
 			description: true
@@ -67,7 +85,6 @@ export async function getAllRecipes() {
 }
 
 export async function getLastRecipeFromDb() {
-
 	const recipe = await db.recipe.findFirst({
 		orderBy: {
 			createdAt: 'desc'

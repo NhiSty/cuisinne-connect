@@ -58,7 +58,7 @@ export const gptGeneratedSideDishesValidator = vine.compile(gptGeneratedSideDish
  *	recipeRatingValidator
  */
 const recipeRatingSchema = vine.object({
-	rating: vine.number().min(1).max(5).decimal([0, 1]),
+	rating: vine.number().min(0).max(5),
 	comment: vine.string().optional()
 });
 export const recipeRatingValidator = vine.compile(recipeRatingSchema);
