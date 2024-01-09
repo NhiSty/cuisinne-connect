@@ -27,16 +27,28 @@ import { getUserFavorites } from '../services/user.service.js';
  */
 export async function getRecipesController(req, res) {
 	const userInput = await recipeSearchParamValidator.validate(req.query.search);
+	const lang = req.headers['accept-language'] || 'fr';
 
 	const recipes = await getAllRecipes();
 
 	const { results } = await searchAndSortRecipes(recipes, userInput);
 
-	res.status(200).send({ items: results });
+	/*const items = await promptToGPT(
+		`Voici un JSON, retourne le en traduisant le contenu en "${lang}" (si nécéssaire):
+		\`\`\`
+		${JSON.stringify(results)}
+		\`\`\`
+		`,
+		lang
+	);*/
+
+	res.status(200).send({ items:results });
 }
 
 export async function getRecipeController(req, res) {
 	const name = await recipeNameParamValidator.validate(req.params.name);
+	const lang = req.headers['accept-language'] || 'fr';
+
 	const recipe = await getRecipe(name, req.user);
 	let isInFavorites;
 
@@ -44,8 +56,18 @@ export async function getRecipeController(req, res) {
 		isInFavorites = await isRecipeInUserFavorites(req.user, recipe);
 	}
 
+	const translatedRecipe = await promptToGPT(
+		`Voici un JSON, retourne le en traduisant le contenu en "${lang}" (si nécessaire):
+		\`\`\`
+		${JSON.stringify(recipe)}
+		\`\`\`
+		`,
+		lang
+	);
+
 	res.json({
-		...recipe,
+		...JSON.parse(translatedRecipe),
+		title: recipe.title,
 		isFavorite: isInFavorites
 	});
 }
@@ -92,12 +114,22 @@ export async function getRecipeIngredientsController(req, res) {
 	const title = await recipeNameParamValidator.validate(req.params.name);
 	const recipe = await getRecipe(title);
 	const ingredients = await db.recipeIngredient.findMany({ where: { recipeId: recipe.id } });
+	const lang = req.headers['accept-language'] || 'fr';
+
 
 	if (!ingredients) {
 		return res.status(404).json({ error: 'Ingredients not found' });
 	}
+	const translatedIngredients = await promptToGPT(
+		`Voici un tableau, retourne le en traduisant le contenu en "${lang}" (si nécessaire):
+		\`\`\`
+		${JSON.stringify(ingredients)}
+		\`\`\`
+		`,
+		lang
+	);
 
-	res.json(ingredients);
+	res.json(JSON.parse(translatedIngredients).ingredients);
 }
 
 /**
@@ -186,16 +218,17 @@ export async function getRecipeRatingController(req, res) {
 export async function fetchSeasonalRecipesController(req, res) {
 	const now = new Date();
 	const month = now.getMonth();
+	const lang = req.headers['accept-language'] || 'fr';
 
 	const gptResponse = await promptToGPT(
 		`Nous sommes le ${month + 1}ème mois de l'année.\
 		Quelles sont les meilleures recommendations de recette de saisons (qui respecte les ingrédients de saison) pour cette période de l'année ?
-		Réponds en français dès que possible.
+		Réponds en ${lang} dès que possible.
 		Schéma de réponse (5 éléments):
 		{
 			"recipes": ["Nom de la recette", "", ...],
 		}
-		`
+		`, lang
 	);
 
 	const obj = JSON.parse(gptResponse);
@@ -212,6 +245,7 @@ export async function fetchSeasonalRecipesController(req, res) {
 export async function getSimilarRecipesController(req, res) {
 	const name = await recipeNameParamValidator.validate(req.params.name);
 	const recipe = await getRecipe(name);
+	const lang = req.headers['accept-language'] || 'fr';
 
 	const now = new Date();
 	const month = now.getMonth();
@@ -232,13 +266,24 @@ export async function getSimilarRecipesController(req, res) {
 		{
 			"recipes": ["Nom de la recette", "", ...],
 		}
-		`
+		`, lang
 	);
 
 	const obj = JSON.parse(gptResponse);
 	const data = await seasonalRecipesValidator.validate(obj);
 
-	res.json(data);
+	const translatedData = await promptToGPT(
+		`Voici un JSON, retourne le en traduisant le continue en "${lang}" (si nécéssaire):
+		\`\`\`
+		{
+			"recipes": ${JSON.stringify(data)}
+		}
+		\`\`\`
+		`,
+		lang
+	);
+
+	res.json(JSON.parse(translatedData));
 }
 
 /**
@@ -249,10 +294,24 @@ export async function getSimilarRecipesController(req, res) {
 export async function getRecipeSideDishController(req, res) {
 	const name = await recipeNameParamValidator.validate(req.params.name);
 	const sideDishes = await getRecipeSideDish(name);
+	const lang = req.headers['accept-language'] || 'fr';
 
-	res.send({
-		sideDishes
-	});
+	if (!sideDishes) {
+		return res.status(404).json({ error: 'Side dishes not found' });
+	}
+
+	const translatedSideDishes = await promptToGPT(
+		`Voici un tableau, retourne le en traduisant le contenu en "${lang}" (si nécessaire):
+		\`\`\`
+		{
+			"sideDishes": ${JSON.stringify(sideDishes)}
+		}
+		\`\`\`
+		`,
+		lang
+	);
+
+	res.json(JSON.parse(translatedSideDishes));
 }
 
 /**

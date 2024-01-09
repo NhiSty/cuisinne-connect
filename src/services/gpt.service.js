@@ -10,15 +10,16 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_CHAT_KEY });
 /**
  * Prompt a text to ChatGPT and return the response
  * @param {string} prompt Text to prompt to ChatGPT
+ * @param lang
  * @returns {Promise<string>} Response from ChatGPT
  */
-export async function promptToGPT(prompt) {
+export async function promptToGPT(prompt, lang = 'fr') {
 	const openaiResponse = await openai.chat.completions.create({
 		model: 'gpt-3.5-turbo-1106',
 		messages: [
 			{
 				role: 'system',
-				content: 'You are a helpful assistant designed to output JSON.' // a ne pas toucher
+				content: `You are a helpful assistant designed to output JSON. You need to respond in the following language: "${lang}"`
 			},
 			{
 				role: 'user',
@@ -35,9 +36,10 @@ export async function promptToGPT(prompt) {
  * Sort and search recipes based on database entries and GPT knowledges
  * @param {{ title: string; summary: string}[]} recipes List of recipes names from the database
  * @param {string} input User input to search recipes
+ * @param lang
  * @returns {Promise<string[]>} List of recipes sorted by GPT
  */
-export async function searchAndSortRecipes(recipes, input) {
+export async function searchAndSortRecipes(recipes, input, lang = 'fr') {
 	const now = new Date();
 	const month = now.getMonth();
 
@@ -70,7 +72,7 @@ export async function searchAndSortRecipes(recipes, input) {
 			...
 		]
 	}
-	`);
+	`,lang);
 
 	const obj = JSON.parse(result);
 	const data = await gptSortedRecipesValidator.validate(obj);
@@ -108,7 +110,8 @@ export async function generateRecipe(name) {
 			...
 		]
 	}
-	`);
+	`
+	);
 
 	const obj = JSON.parse(result);
 	const data = await gptGeneratedRecipeValidator.validate(obj);
