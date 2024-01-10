@@ -216,7 +216,7 @@ async function promptToGenerateRecipe(prompt) {
 							description: 'Titre de la recette'
 						},
 						cookingTime: {
-							type: 'string',
+							type: 'number',
 							description: 'Temps de cuisson de la recette en minutes'
 						},
 						description: {
