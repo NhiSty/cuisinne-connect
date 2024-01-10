@@ -4,6 +4,7 @@ import {
 	findRecipesByName,
 	getLastRecipeFromDb,
 	getRecipe,
+	getRecipesByCalories,
 	getRecipeOrGenerate,
 	getRecipeRatings,
 	getRecipeSideDish,
@@ -31,9 +32,9 @@ export async function getRecipesController(req, res) {
 
 	const recipes = await findRecipesByName(userInput);
 
-	const { results } = await searchAndSortRecipes(userInput, req.user);
+	const { recipes: searchedRecipes } = await searchAndSortRecipes(userInput, req.user);
 
-	res.status(200).send({ items: [...results, ...recipes] });
+	res.status(200).send({ items: [...searchedRecipes, ...recipes] });
 }
 
 export async function getRecipeController(req, res) {
@@ -268,6 +269,14 @@ export async function getRecipeSideDishController(req, res) {
 	res.send({
 		sideDishes
 	});
+}
+
+export async function searchRecipesByCaloriesController(req, res) {
+	const { searchByCalories } = req.query;
+	const { user } = req;
+	const recipe = await getRecipesByCalories(searchByCalories, user);
+
+	res.json(recipe);
 }
 
 /**
