@@ -2,6 +2,7 @@
 	"name": "pemd-api",
 	"version": "0.0.0",
 	"private": true,
+	"type": "module",
 	"prisma": {
 		"seed": "node prisma/seed.js"
 	},
@@ -11,34 +12,35 @@
 		"test": "jest",
 		"test:watch": "jest --watchAll",
 		"lint": "eslint .",
-		"lint:fix": "eslint --fix ."
+		"lint:fix": "eslint --fix .",
+		"prisma": "npx prisma"
 	},
 	"dependencies": {
-		"@prisma/client": "^3.14.0",
-		"argon2": "^0.28.5",
-		"axios": "^1.4.0",
-		"cookie-parser": "^1.4.5",
+		"@prisma/client": "^5.7.1",
+		"@vinejs/vine": "^1.7.0",
+		"argon2": "^0.31.2",
+		"axios": "^1.6.2",
+		"cookie-parser": "^1.4.6",
 		"cors": "^2.8.5",
-		"dotenv": "^16.0.1",
-		"express": "^4.17.1",
-		"helmet": "^3.23.3",
-		"http-errors": "^1.8.0",
-		"jsonwebtoken": "^8.5.1",
+		"dotenv": "^16.3.1",
+		"express": "^5.0.0-beta.1",
+		"helmet": "^7.1.0",
+		"http-errors": "^2.0.0",
+		"jsonwebtoken": "^9.0.2",
 		"morgan": "^1.10.0",
-		"validator": "^13.7.0",
-		"openai": "^4.6.0"
+		"openai": "^4.24.1"
 	},
 	"devDependencies": {
-		"@babel/preset-env": "^7.22.5",
-		"@types/jest": "^29.5.2",
-		"eslint": "^5.16.0",
-		"eslint-config-airbnb-base": "^13.2.0",
-		"eslint-config-prettier": "^6.15.0",
-		"eslint-plugin-import": "^2.23.4",
-		"eslint-plugin-prettier": "^3.4.0",
-		"jest": "^24.9.0",
-		"nodemon": "^2.0.12",
-		"prisma": "^3.15.2"
+		"@babel/preset-env": "^7.23.6",
+		"@types/jest": "^29.5.11",
+		"eslint": "^8.56.0",
+		"eslint-config-airbnb-base": "^15.0.0",
+		"eslint-config-prettier": "^9.1.0",
+		"eslint-plugin-import": "^2.29.1",
+		"eslint-plugin-prettier": "^5.1.2",
+		"jest": "^29.7.0",
+		"nodemon": "^3.0.2",
+		"prisma": "^5.7.1"
 	},
 	"jest": {
 		"testEnvironment": "node",
