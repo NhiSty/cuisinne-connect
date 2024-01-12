@@ -1,5 +1,10 @@
-import { db } from '../database.js';
-import { generateRecipe, generateRecipeSideDish } from './gpt.service.js';
+import {db} from '../database.js';
+import {
+	generateRecipe,
+	generateRecipe2,
+	generateRecipeSideDish,
+	searchRecipesByCalories
+} from './gpt.service.js';
 
 export async function getRecipe(name) {
 	const recipe = await db.recipe.findUnique({
@@ -27,12 +32,12 @@ export async function getRecipeOrGenerate(name, currentUser = null) {
 	const result = await db.recipe.create({
 		data: {
 			title: generatedRecipe.title,
-			description: generatedRecipe.description,
+			description: generatedRecipe?.description || '',
 			cookingTime: generatedRecipe.cookingTime,
 			servings: generatedRecipe.servings,
 			ingredients: {
 				createMany: {
-					data: generatedRecipe.ingredients.map((ingredient) => ({
+					data: generatedRecipe.ingredients?.map((ingredient) => ({
 						name: ingredient
 					}))
 				}
@@ -40,7 +45,7 @@ export async function getRecipeOrGenerate(name, currentUser = null) {
 			authorId: currentUser?.id,
 			instructions: {
 				createMany: {
-					data: generatedRecipe.instructions.map((instructions) => ({ instructions }))
+					data: generatedRecipe.instructions?.map((instructions) => ({ instructions }))
 				}
 			}
 		},
@@ -149,4 +154,8 @@ export async function toggleInFavorites(user, recipe) {
 			}
 		});
 	}
+}
+
+export async function getRecipesByCalories(calories, user) {
+	return searchRecipesByCalories(calories, user);
 }

@@ -20,7 +20,7 @@ import {
 	postRatingController,
 	postCommentController,
 	updateRecipeFavoriteForUser,
-	getUserFavoritesController
+	getUserFavoritesController, searchRecipesByCaloriesController
 } from './controllers/recipes.js';
 import { authOnlyMiddleware } from './middleware/authOnly.js';
 import { guestOnlyMiddleware } from './middleware/guestOnly.js';
@@ -50,6 +50,7 @@ export function setupRoutes(app) {
 	app.get('/api/recipes/:name/ingredients', getRecipeIngredientsController);
 	app.get('/api/recipes/:name/similar', getSimilarRecipesController);
 	app.get('/api/recipes/:name/sideDish', getRecipeSideDishController);
+	app.get('/api/recipes-by-categories', searchRecipesByCaloriesController);
 	app.get('/api/recipes/:name/listCourse', getListCourse);
 	app.put('/api/recipes/:name/favorite', authOnlyMiddleware, updateRecipeFavoriteForUser);
 
