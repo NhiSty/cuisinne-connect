@@ -26,7 +26,7 @@ export async function getRecipeOrGenerate(name, currentUser = null) {
 	if (recipe) return recipe;
 
 	// If the recipe does not exist, then ask ChatGPT to create it
-	const generatedRecipe = await generateRecipe2(name);
+	const generatedRecipe = await generateRecipe(name);
 
 	// Then create the recipe in database
 	const result = await db.recipe.create({

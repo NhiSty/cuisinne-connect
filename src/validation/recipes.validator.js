@@ -40,8 +40,6 @@ const gptGeneratedRecipe = vine.object({
 	title: vine.string(),
 	description: vine.string(),
 	cookingTime: vine.number(),
-	nombre_calories: vine.number(),
-	price: vine.number(),
 	servings: vine.number(),
 	ingredients: vine.array(vine.string()),
 	instructions: vine.array(vine.string())

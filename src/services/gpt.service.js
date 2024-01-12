@@ -350,8 +350,5 @@ export async function searchRecipesByCalories(calories, user) {
 	`
 	);
 
-	console.log(result);
-	console.log(min, max);
-
 	return JSON.parse(result);
 }
